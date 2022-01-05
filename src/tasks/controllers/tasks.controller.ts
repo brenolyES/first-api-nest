@@ -1,40 +1,51 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateOrUpdateTaskDto } from '../dtos/create-or-update-task.dto';
+import { TasksService } from '../service/tasks.service';
 
 
 @ApiTags('Tasks')
 @Controller('api/tasks')
 export class TasksController {
 
+  constructor(private tasksService: TasksService){}
+
   @ApiOperation({summary:'Retornar todas as tarefas.'})
   @Get()
-  getAll() {
-    return [1,2,3]
+  async getAll() {
+    const tasks = await this.tasksService.findAll();
+    return {message: 'Listando todas as tarefas', tasks}
   }
 
   @ApiOperation({summary:'Retornar uma tarefa pelo id.'})
   @Get(':id')
-  getOne(@Param('id') id:number){
-    return id;
+  async getOne(@Param('id', ParseIntPipe) id:number){
+    const taskFound = await this.tasksService.findById(id);
+    if(!taskFound){
+      throw new NotFoundException('Id não encontrado');
+    } 
+    return {message: 'Listando uma tarefa por id.', task:taskFound}
   }
 
   @ApiOperation({summary:'Criar uma tarefa.'})
   @Post()
-  create(@Body() body: CreateOrUpdateTaskDto){
-    return body;
+  async create(@Body() body: CreateOrUpdateTaskDto){
+    const task = await this.tasksService.createTask(body); 
+    return {message: 'tarefa criada com sucesso.', task}
   }
 
   @ApiOperation({summary:'Atualizar uma tarefa pelo id.'})
   @Put(':id')
-  update(@Param('id') id:number, @Body() body:CreateOrUpdateTaskDto){
-    return body;
+  async update(@Param('id', ParseIntPipe) id:number, @Body() body:CreateOrUpdateTaskDto){
+    const task = await this.tasksService.updateTask(id, body); 
+    return {message: 'tarefa atualizada com sucesso.', task}
   }
 
   @ApiOperation({summary:'Deletar uma tarefa pelo id.'})
   @Delete(':id')
-  delete(@Param('id') id:number){
-    return true;
+  async delete(@Param('id', ParseIntPipe) id:number){
+    const task = await this.tasksService.deleteTask(id); 
+    return {message: 'tarefa deletada com sucesso.', task}
   }
 
 }
