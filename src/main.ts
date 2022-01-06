@@ -10,11 +10,11 @@ async function configSwagger (app) {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/', app, document);
-
 }
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   configSwagger(app);
   await app.listen(process.env.PORT || 3000);
 }
